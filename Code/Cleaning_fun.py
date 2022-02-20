@@ -20,7 +20,7 @@ def num_NaNs(df, n=0):
     return NaNs_dict
 ###############################################################################################
 columns_2drop = ['listing_url', 'scrape_id', 'last_scraped', 'host_id', 'host_url', 'region_id', 'region_name', 'region_parent_id', 'region_parent_name', 
-'region_parent_parent_id','region_parent_parent_name', 'license', 'picture_url', 'host_thumbnail_url' ]
+'region_parent_parent_id','region_parent_parent_name', 'license', 'picture_url', 'host_thumbnail_url','calendar_updated','requires_license','last_searched']
 def Clean_columns(df, colms = columns_2drop, inpl = False):
     return df.drop(columns = colms, inplace=inpl)
 ###############################################################################################
