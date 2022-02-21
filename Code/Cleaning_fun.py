@@ -1,5 +1,9 @@
 import pandas as pd
-
+from geopy.geocoders import Nominatim
+import reverse_geocoder 
+from langdetect import detect, DetectorFactory
+import re
+DetectorFactory.seed = 3
 
 ###############################################################################################
 def num_NaNs(df, n=0):
@@ -18,9 +22,46 @@ def num_NaNs(df, n=0):
     for k in keys:
         NaNs_dict.pop(k)
     return NaNs_dict
+
 ###############################################################################################
-columns_2drop = ['listing_url', 'scrape_id', 'last_scraped', 'host_id', 'host_url', 'region_id', 'region_name', 'region_parent_id', 'region_parent_name', 
-'region_parent_parent_id','region_parent_parent_name', 'license', 'picture_url', 'host_thumbnail_url','calendar_updated','requires_license','last_searched']
-def Clean_columns(df, colms = columns_2drop, inpl = False):
+not_rel = ['id', 'scrape_id', 'last_scraped', 'name','picture_url', 'host_id', 'host_url','host_location', 'license',
+'host_name','instant_bookable','neighborhood_overview']
+def Clean_columns(df, colms = not_rel, inpl = False):
     return df.drop(columns = colms, inplace=inpl)
+
+###############################################################################################
+def city_country_fun(df):
+    df['coord'] = df.apply(lambda x: (x['latitude'], x['longitude']), axis=1)
+    df.drop(columns=['latitude','longitude'], inplace=True)
+    geo_info = reverse_geocoder.search(list(df.coord))
+    countries = [i['cc'] for i in geo_info]
+    cities = [i['name'] for i in geo_info]
+    df['city'] = cities
+    df['cc'] = countries
+    df.drop(columns=['coord'], inplace=True)
+    return df
+###############################################################################################
+
+def detect_lan(df, serie):
+    app = []
+    for i in df[serie]:
+        if type(i) == str:
+            try:
+                app.append(detect(i))
+            except:
+                app.append('Unknown')
+        else:
+            app.append('Unknown')
+    return app
+
+###############################################################################################
+
+def bath_clean(s):
+    if re.findall('(?i)(shared)|(half)',str(s)):
+        return 0
+    
+    else:
+        if re.findall('\d',str(s)): return re.findall('\d',s)[0]
+        else: return 0
+
 ###############################################################################################
