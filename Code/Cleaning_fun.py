@@ -26,13 +26,31 @@ def num_NaNs(df, n=0):
 
 ###############################################################################################
 not_rel =['id', 'scrape_id', 'last_scraped', 'name','picture_url', 'host_id', 'host_url','host_location', 'license',
-'host_name','instant_bookable','neighborhood_overview','neighbourhood_group_cleansed','calendar_updated','host_thumbnail_url','availability_30',
-'availability_60', 'availability_90','calendar_last_scraped','listing_url','property_type','bathrooms','host_picture_url','host_listings_count',
+'host_name','instant_bookable','neighborhood_overview','neighbourhood_group_cleansed','calendar_updated','host_thumbnail_url','calendar_last_scraped','listing_url','property_type','bathrooms','host_picture_url','host_listings_count',
 'neighbourhood','beds','minimum_minimum_nights', 'maximum_minimum_nights', 'minimum_maximum_nights', 'maximum_maximum_nights','minimum_nights_avg_ntm', 
-'maximum_nights_avg_ntm','number_of_reviews_ltm','number_of_reviews_l30d','first_review', 'last_review','review_scores_value','calculated_host_listings_count',
-'calculated_host_listings_count_entire_homes','calculated_host_listings_count_private_rooms','calculated_host_listings_count_shared_rooms']
+'maximum_nights_avg_ntm','number_of_reviews_ltm','number_of_reviews_l30d','first_review', 'last_review','calculated_host_listings_count',
+'calculated_host_listings_count_entire_homes']
 def Clean_columns(df, colms = not_rel, inpl = False):
     return df.drop(columns = colms, inplace=inpl)
+
+###############################################################################################
+
+def cl_amenities(s):
+    if s != np.nan:
+        l = s.lower().replace('[','').replace(']','').replace('"','').replace(' ','').split(',')
+        p = ['wifi','washer','parking','essentials','heating','smokealarm','hotwater','hairdryer','kitchen','longtermstay','iron','dishesandsilverware'
+        'dedicatedworkspace','coffeemaker','refrigerator','bedlinens','cookingbasics','carbonmonoxidealarm','fireextinguisher','firstaidkit',
+        'oven','privateentrance','microwave','pets','stove','tv','extrapillowsandblankets','hostgreetsyou','luggagedropoffallowed','bathtub','patio']
+        res = []
+        a = False
+        for i in l:
+            for j in p:
+                if j in i: res.append(j)
+                else: a = True
+        if a: res.append('other')
+        return res
+    else:
+        return np.nan
 
 ###############################################################################################
 def city_country_fun(df):
@@ -98,6 +116,11 @@ def cl_host_verifications(x):
     else: return 1
 
 ###############################################################################################
+
+def distance_center(lat, lon):
+    return (((52.377956-lat)**2+(4.897070-lon)**2)**(0.5))
+
+###############################################################################################
 def vectorize(df):
     	
     df.host_is_superhost = df.host_is_superhost.apply(lambda x: 1 if x=='t' else 0)
@@ -109,12 +132,18 @@ def vectorize(df):
     df.host_acceptance_rate = df.host_acceptance_rate.apply(lambda x: np.nan if type(x) == float else pd.to_numeric(x[:-1]))
     df.host_response_rate = df.host_response_rate.apply(lambda x: np.nan if type(x) == float else pd.to_numeric(x[:-1]))
     df.host_since = df.host_since.apply(lambda x: np.nan if x==np.nan else 2022-int(re.findall('\d{4}',x)[0]))
-    #df.bathrooms_text = df.bathrooms_text(bath_clean)
+    df.bathrooms_text = df.bathrooms_text.apply(bath_clean)
     df['host_response_time'] = df.host_response_time.apply(cl_host_response_time)
     df['host_verifications'] = df.host_verifications.apply(cl_host_verifications)
     
-    
-    
+    df['dist_cent'] = df.apply(lambda x: distance_center(x.latitude,x.longitude), axis=1)
+    df.drop(columns=['latitude','longitude'], inplace=True)
+
+    df.amenities = df.amenities.apply(cl_amenities)
+    l =['bathtub', 'luggagedropoffallowed', 'hostgreetsyou', 'extrapillowsandblankets', 'patio', 'microwave', 'privateentrance', 'firstaidkit', 'stove', 'oven','pets', 'fireextinguisher', 'carbonmonoxidealarm', 'cookingbasics', 'bedlinens', 'parking', 'coffeemaker', 'refrigerator', 'iron', 'longtermstay', 'kitchen', 'hairdryer', 'smokealarm', 'hotwater', 'heating', 'essentials', 'other', 'wifi', 'tv', 'washer']
+    df[l] = pd.get_dummies(df['amenities'].apply(pd.Series).stack()).groupby(level=0).sum()
+    df.drop(columns=['amenities','longtermstay'], inplace = True)
+
     df['lang_des']=detect_lan(df, 'description')
     df['lang_host']=detect_lan(df, 'host_about')
     df['lang_var'] =df.apply(lambda x: lang_clean(x.lang_des,x.lang_host), axis=1)

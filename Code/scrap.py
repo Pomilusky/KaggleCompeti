@@ -4,7 +4,9 @@ import numpy as np
 
 # I am going to scrap the price of the airbnb in descember last year, in order to try and guess the price from there,
 df = pd.read_csv('../Data/train.csv') # let's import the data frame
-
+df1 = df.iloc[:1000]
+df2 = df.iloc[1000:2000]
+df3 = df.iloc[2000:]
 # let's create the function to scrap each url,
 def scrap_price(l_url):
     try:
@@ -23,8 +25,17 @@ def scrap_price(l_url):
         driver.quit()
         return np.nan # If we can' acces the url we are going to give it a np.nan value
 
-df['price_now'] = df.listing_url.apply(scrap_price)
-df.to_csv('../Data/ambPriceNow.csv',mode='w', index=False, header=True)
+df1['price_now'] = df1.listing_url.apply(scrap_price)
+df1.to_csv('../Data/ambPriceNow.csv',mode='w', index=False, header=True)
+
+print('Portem 1000')
+df2['price_now'] = df2.listing_url.apply(scrap_price)
+df2.to_csv('../Data/ambPriceNow.csv',mode='a', index=False, header=False)
+
+df3['price_now'] = df3.listing_url.apply(scrap_price)
+df3.to_csv('../Data/ambPriceNow.csv',mode='a', index=False, header=False)
 # Let's do the same with the test,
+
 df_test = pd.read_csv('../Data/test.csv')
+df_test['price_now'] = df_test.listing_url.apply(scrap_price)
 df_test.to_csv('../Data/TestAmbPriceNow.csv', mode='w', index=False, header=True)
