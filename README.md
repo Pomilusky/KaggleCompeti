@@ -12,7 +12,7 @@ Lastly I would also like to remark that this competition had a duration of less 
 I have mainly worked with the *train.csv* file. First I did a first cleaning of the data, deleting all the columns that I thought had no relevance whatsoever with the price, such as the host ID or the host's picture url. After that I followed 3 main processes before starting with the Machine Learining techniques. In the following section I am going to go through this processes. 
 
 
-### The keys that lead to victory:
+### The keys:
 
 * Scrapping, one of the first things I noticed was that there was a column with the urls of the flats that were offered in airbnb. This was a huge opportunity to gather more data. I started to work with a code to scrap this urls with selenium. This was very challenging, and after trying different methods I was able to scrap most of the urls and get the actual price of the flats. The addition of this new column, a column I called "price_now", was one of the main keys, obviously, but not the only one. 
 
